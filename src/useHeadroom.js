@@ -1,4 +1,4 @@
-import { useEffect, useRef, useReducer } from "react";
+import React, { useEffect, useRef, useReducer } from "react";
 import throttle from "raf-throttle";
 import shouldUpdate from "./shouldUpdate";
 
