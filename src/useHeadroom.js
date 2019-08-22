@@ -121,7 +121,8 @@ function useHeadroom({ ref, props = {} }) {
     upTolerance = 5,
     downTolerance = 0,
     pinStart = 0,
-    calcHeightOnResize = true
+    calcHeightOnResize = true,
+    disableInlineStyles = false
   } = props;
   const currentScrollY = useRef(0);
   const lastKnownScrollY = useRef(0);
@@ -195,10 +196,10 @@ function useHeadroom({ ref, props = {} }) {
   }, [state, onPin, onUnpin, onUnfix, prevState]);
 
   return {
-    wrapperStyles: {
+    wrapper: {
       height: height || null
     },
-    innerStyle,
+    innerStyle: disableInlineStyles ? {} : innerStyle,
     className: state.className,
     state: state.state
   };
