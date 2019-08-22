@@ -1,4 +1,12 @@
-import React, { useEffect, useRef, useReducer } from "react";
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  useReducer,
+  useLayoutEffect
+} from "react";
+
 import throttle from "raf-throttle";
 import shouldUpdate from "./shouldUpdate";
 
@@ -14,6 +22,14 @@ function getDocumentHeight() {
     body.clientHeight,
     documentElement.clientHeight
   );
+}
+
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
 }
 
 function isOutOfBound(currentScrollY) {
@@ -75,31 +91,47 @@ function reducer(state, { type, payload }) {
   }
 }
 
-function useHeadroom({ ref }) {
+const noop = () => {};
+
+function useHeight(ref, calcHeightOnResize = true) {
+  const [height, setHeight] = useState(0);
+  useLayoutEffect(() => {
+    const handle = throttle(() => {
+      setHeight(ref.current.offsetHeight);
+    });
+
+    setHeight(ref.current.offsetHeight);
+
+    if (calcHeightOnResize) window.addEventListener("resize", handle);
+
+    return () => {
+      if (calcHeightOnResize) window.removeEventListener("resize", handle);
+    };
+  }, [height, ref, calcHeightOnResize]);
+
+  return height;
+}
+
+function useHeadroom({ ref, props = {} }) {
+  const {
+    onPin = noop,
+    onUnpin = noop,
+    onUnfix = noop,
+    disable = false,
+    upTolerance = 5,
+    downTolerance = 0,
+    pinStart = 0,
+    calcHeightOnResize = true
+  } = props;
   const currentScrollY = useRef(0);
   const lastKnownScrollY = useRef(0);
-  const height = useRef(0);
+  const height = useHeight(ref, calcHeightOnResize);
   const [state, dispatch] = useReducer(reducer, {
     state: "unfixed",
     translateY: 0,
     className: "headroom headroom--unfixed"
   });
-
-  useEffect(() => {
-    height.current = ref.current.offsetHeight;
-  }, [state, height, ref]);
-
-  useEffect(() => {
-    const handle = throttle(() => {
-      height.current = ref.current.offsetHeight;
-    });
-
-    window.addEventListener("resize", handle);
-
-    return () => {
-      window.removeEventListener("resize", handle);
-    };
-  }, [height, ref]);
+  const prevState = usePrevious(state.state);
 
   useEffect(() => {
     const handle = throttle(() => {
@@ -110,10 +142,10 @@ function useHeadroom({ ref }) {
           lastKnownScrollY.current,
           currentScrollY.current,
           {
-            disable: false,
-            upTolerance: 5,
-            downTolerance: 0,
-            pinStart: 0
+            disable,
+            upTolerance,
+            downTolerance,
+            pinStart
           },
           {
             ...state,
@@ -132,7 +164,7 @@ function useHeadroom({ ref }) {
     return () => {
       window.removeEventListener("scroll", handle);
     };
-  }, [ref, state, height]);
+  }, [ref, state, height, disable, upTolerance, downTolerance, pinStart]);
 
   let innerStyle = {
     position: state.state === "unfixed" ? "relative" : "fixed",
@@ -150,9 +182,21 @@ function useHeadroom({ ref }) {
     };
   }
 
+  useEffect(() => {
+    if (prevState !== state.state) {
+      if (state.state === "pinned") {
+        onPin();
+      } else if (state.state === "unpinned") {
+        onUnpin();
+      } else if (state.stae === "unfixed") {
+        onUnfix();
+      }
+    }
+  }, [state, onPin, onUnpin, onUnfix, prevState]);
+
   return {
     wrapperStyles: {
-      height: height.current
+      height: height || null
     },
     innerStyle,
     className: state.className,
