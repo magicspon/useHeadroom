@@ -35,6 +35,8 @@ function Headroom({
     calcHeightOnResize
   });
 
+  console.log("/RENDER/");
+
   return (
     <header
       className={wrapperClassName}

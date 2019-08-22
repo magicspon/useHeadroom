@@ -148,7 +148,7 @@ function useHeadroom({ ref, props = {} }) {
           },
           {
             ...state,
-            height: height.current
+            height
           }
         );
 
@@ -197,7 +197,7 @@ function useHeadroom({ ref, props = {} }) {
     wrapper: {
       height: height || null
     },
-    innerStyle: disableInlineStyles ? {} : innerStyle,
+    innerStyle,
     className: state.className,
     state: state.state
   };
