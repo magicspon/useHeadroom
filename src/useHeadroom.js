@@ -1,3 +1,4 @@
+
 import {
   useEffect,
   useRef,
@@ -5,6 +6,7 @@ import {
   useReducer,
   useLayoutEffect
 } from "react";
+
 import throttle from "raf-throttle";
 import shouldUpdate from "./shouldUpdate";
 
