@@ -7,8 +7,6 @@ function Headroom({ style = {}, containerStyle = {}, children }) {
     ref: node
   });
 
-  console.log(wrapperStyles);
-
   return (
     <header ref={node} style={wrapperStyles}>
       <div className={className} style={{ ...style, ...innerStyle }}>
